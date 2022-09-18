@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image management</title>
+</head>
+<body>
+    <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
+        Background image : <input type="file" id="backgroundFileLoader" name="background"> <br>
+        Gif image : <input type="file" id="gifImageLoader" name="gif">
+        <input type="hidden" id="gifStartingX" name="gif_starting_x">
+        <input type="hidden" id="gifStartingY" name="gif_starting_y"> <br>
+        <input type="submit" value="Generate">
+    </form>
+    Left click on an image to start moving it and left click again on the image to place it <br>
+    <img src="" id="backgroundImage" class="image"/>
+    <img src="" id="gif" class="image">
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function (){
+        // Initialize background image and gif image
+        var backgroundImage = document.getElementById("backgroundImage");
+        var gifImage = document.getElementById("gif");
+
+        backgroundImage.style.position="absolute";
+        gifImage.style.position="absolute";
+
+        backgroundImage.style.zIndex=1;
+        gifImage.style.zIndex=2;
+
+        // Load background image
+        var backgroundImageInput = document.getElementById("backgroundFileLoader");
+        backgroundImageInput.onchange = function (event) {
+            backgroundImage.src = URL.createObjectURL(event.target.files[0]);
+        }
+
+        // Load gif image
+        var gifImageInput = document.getElementById("gifImageLoader");
+        gifImageInput.onchange = function (event) {
+            gifImage.src = URL.createObjectURL(event.target.files[0]);
+        }
+
+        // Moving elements on click part
+        var imageElements = document.getElementsByClassName("image");
+        var selectedElement = null;
+
+        for (var i = 0; i < imageElements.length; i++) {
+            imageElements[i].onclick = function (event) {
+                console.log(event.button);
+                if(selectedElement === event.target) {
+                    selectedElement = null;
+                }
+                else {
+                    selectedElement = event.target;
+                }
+                console.log(selectedElement);
+
+                window.onmousemove = function (eventMouseMove) {
+                    if (selectedElement != null) {
+                        selectedElement.style.left = selectedElement.getBoundingClientRect().left + eventMouseMove.movementX + "px";
+                        selectedElement.style.top = selectedElement.getBoundingClientRect().top + eventMouseMove.movementY + "px";
+                    }
+                };
+
+            };
+        }
+
+        // Uploading form part
+        var formElement = document.getElementById("imageForm");
+        formElement.onsubmit = function (event) {
+            var gifStartingX = gifImage.getBoundingClientRect().left - backgroundImage.getBoundingClientRect().left;
+            var gifStartingY = gifImage.getBoundingClientRect().top - backgroundImage.getBoundingClientRect().top;
+
+            var gifStartingXInput = document.getElementById("gifStartingX");
+            var gifStartingYInput = document.getElementById("gifStartingY");
+
+            gifStartingXInput.value = gifStartingX;
+            gifStartingYInput.value = gifStartingY;
+        }
+
+    });
+</script>
+
+</html>

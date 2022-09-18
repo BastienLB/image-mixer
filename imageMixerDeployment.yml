@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: development
+  name: image-mixer-deployment
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: image-mixer
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 300
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      namespace: development
+      labels:
+        app: image-mixer
+    spec:
+      containers:
+      - name: image-mixer-pod
+        image: registry.gurdil.fr:4443/image_mixer:v2.1-amd64
+        ports:
+        - containerPort: 80
+        env:
+          - name: SERVICE_IP
+            value: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: development
+  name: lb-token-service
+spec:
+  selector:
+    app: image-mixer
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer

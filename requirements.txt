@@ -1,0 +1,3 @@
+Pillow
+fastapi[all]
+jinja2
