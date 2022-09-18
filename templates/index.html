@@ -8,8 +8,8 @@
     <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
         Background image : <input type="file" id="backgroundFileLoader" name="background"> <br>
         Gif image : <input type="file" id="gifImageLoader" name="gif"> <br>
-        <input type="number" id="gifStartingX" name="gif_starting_x"> <br>
-        <input type="number" id="gifStartingY" name="gif_starting_y"> <br>
+        <input type="hidden" id="gifStartingX" name="gif_starting_x"> <br>
+        <input type="hidden" id="gifStartingY" name="gif_starting_y"> <br>
         <input type="submit" value="Generate">
     </form>
     Left click on an image to start moving it and left click again on the image to place it <br>
