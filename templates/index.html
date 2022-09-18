@@ -7,9 +7,9 @@
 <body>
     <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
         Background image : <input type="file" id="backgroundFileLoader" name="background"> <br>
-        Gif image : <input type="file" id="gifImageLoader" name="gif">
-        <input type="hidden" id="gifStartingX" name="gif_starting_x">
-        <input type="hidden" id="gifStartingY" name="gif_starting_y"> <br>
+        Gif image : <input type="file" id="gifImageLoader" name="gif"> <br>
+        <input type="number" id="gifStartingX" name="gif_starting_x"> <br>
+        <input type="number" id="gifStartingY" name="gif_starting_y"> <br>
         <input type="submit" value="Generate">
     </form>
     Left click on an image to start moving it and left click again on the image to place it <br>
@@ -46,8 +46,9 @@
         var selectedElement = null;
 
         for (var i = 0; i < imageElements.length; i++) {
+
+            // Mouse click events
             imageElements[i].onclick = function (event) {
-                console.log(event.button);
                 if(selectedElement === event.target) {
                     selectedElement = null;
                 }
@@ -64,7 +65,39 @@
                 };
 
             };
+
+            // Click events
+            imageElements[i].addEventListener("touchstart", function (touchstartEvent) {
+                document.body.style.touchAction = "none";
+                touchstartEvent.preventDefault();
+
+                selectedElement = touchstartEvent.target;
+
+                var previousTouchX = touchstartEvent.touches[0].clientX;
+                var previousTouchY = touchstartEvent.touches[0].clientY;
+                selectedElement.ontouchmove = (touchmoveEvent) => {
+                    touchmoveEvent.preventDefault();
+                    document.body.style.touchAction = "none";
+                    var currentTouchX = touchmoveEvent.touches[0].clientX;
+                    var currentTouchY = touchmoveEvent.touches[0].clientY;
+
+                    var moveX = currentTouchX - previousTouchX;
+                    var moveY = currentTouchY - previousTouchY;
+
+                    selectedElement.style.left = selectedElement.getBoundingClientRect().left + moveX + "px";
+                    selectedElement.style.top = selectedElement.getBoundingClientRect().top + moveY + "px";
+
+                    previousTouchX = currentTouchX;
+                    previousTouchY = currentTouchY;
+                }
+
+                selectedElement.addEventListener("touchend", function (touchendEvent){
+                    selectedElement = null;
+                    document.body.style.touchAction = "auto";
+                });
+            });
         }
+
 
         // Uploading form part
         var formElement = document.getElementById("imageForm");
@@ -75,8 +108,8 @@
             var gifStartingXInput = document.getElementById("gifStartingX");
             var gifStartingYInput = document.getElementById("gifStartingY");
 
-            gifStartingXInput.value = gifStartingX;
-            gifStartingYInput.value = gifStartingY;
+            gifStartingXInput.value = parseInt(gifStartingX);
+            gifStartingYInput.value = parseInt(gifStartingY);
         }
 
     });
