@@ -70,9 +70,13 @@ async def append_gif(
         gif_starting_y: int = Form()
 ):
     """
-    Add a gif on top of a static background image <br>
+    Add a gif on top of a static background image <br><br>
     :param background: Background image <br>
-    :param gif: Gif to place. Everything outside the background image will get cut
+    :param gif: Gif to place. Everything outside the background image will get cut <br>
+    :param gif_starting_x: gif starting position in X axis relative to background image.
+    Background image top left corner is x = 0 and y = 0 <br>
+    :param gif_starting_y: gif starting position in Y axis relative to background image.
+    Background image top left corner is x = 0 and y = 0 <br>
     """
 
     base_name = get_random_string(5)
