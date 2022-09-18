@@ -95,8 +95,7 @@ async def append_gif(
         background = background.convert("RGBA")
         frame = frame.convert("RGBA")
 
-        # background.paste(frame, (gif_starting_x, gif_starting_y), mask=frame)
-        background.paste(frame, (gif_starting_x, gif_starting_y))
+        background.paste(frame, (gif_starting_x, gif_starting_y), mask=frame)
         new_frames.append(background)
 
     gif_name = f"{base_name}.gif"
