@@ -2,11 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/bootstrap-icons-1.9.1/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/style.css">
     <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
     <title>Image management</title>
 </head>
 <body>
+    <div class="container">
+        <div class="row">
+          <div class="col">
+            <h1>Image-Generator</h1>
+          </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">Background-Image</label>
+                        <input class="form-control" type="file" id="backgroundFileLoader" name="background">
+                    </div>
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">GIF-Image</label>
+                        <input class="form-control" type="file" id="gifImageLoader" name="gif">
+                    </div>
+                    <input type="hidden" id="gifStartingX" name="gif_starting_x">
+                    <input type="hidden" id="gifStartingY" name="gif_starting_y">
+                </form>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+                <button type="button" class="btn btn-primary" onclick="generateImg()" id="generate">Generate</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+                <img src="" id="backgroundImage" class="image img-fluid"/>
+                <img src="" id="gif" class="image">
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+                <div class="card info-card">
+                    <div class="card-body">
+                        <i class="bi bi-info-circle"></i>
+                        Left click on an image to start moving it and left click again on the image to place it
+                    </div>
+                  </div>
+            </div>
+          </div>
+      </div>
+<!--
     <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
         Background image : <input type="file" id="backgroundFileLoader" name="background"> <br>
         Gif image : <input type="file" id="gifImageLoader" name="gif"> <br>
@@ -17,6 +64,7 @@
     Left click on an image to start moving it and left click again on the image to place it <br>
     <img src="" id="backgroundImage" class="image"/>
     <img src="" id="gif" class="image">
+-->
 </body>
 
 <script>
@@ -102,7 +150,7 @@
 
 
         // Uploading form part
-        var formElement = document.getElementById("imageForm");
+        /*var formElement = document.getElementById("imageForm");
         formElement.onsubmit = function (event) {
             var gifStartingX = gifImage.getBoundingClientRect().left - backgroundImage.getBoundingClientRect().left;
             var gifStartingY = gifImage.getBoundingClientRect().top - backgroundImage.getBoundingClientRect().top;
@@ -112,9 +160,20 @@
 
             gifStartingXInput.value = parseInt(gifStartingX);
             gifStartingYInput.value = parseInt(gifStartingY);
-        }
+        }*/
+        
+        // Under Constrction
+        document.getElementById("generate").onclick = function generateImg() {
+            var gifStartingX = gifImage.getBoundingClientRect().left - backgroundImage.getBoundingClientRect().left;
+            var gifStartingY = gifImage.getBoundingClientRect().top - backgroundImage.getBoundingClientRect().top;
+
+            var gifStartingXInput = document.getElementById("gifStartingX");
+            var gifStartingYInput = document.getElementById("gifStartingY");
+
+            gifStartingXInput.value = parseInt(gifStartingX);
+            gifStartingYInput.value = parseInt(gifStartingY);
+        };
 
     });
 </script>
-
 </html>
