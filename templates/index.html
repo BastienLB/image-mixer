@@ -46,7 +46,7 @@
         var selectedElement = null;
 
         for (var i = 0; i < imageElements.length; i++) {
-
+            imageElements[i].style.border="1px solid red";
             // Mouse click events
             imageElements[i].onclick = function (event) {
                 if(selectedElement === event.target) {

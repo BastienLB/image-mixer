@@ -1,9 +1,11 @@
-from fastapi import FastAPI, UploadFile, Response, Request, Form
+from fastapi import FastAPI, UploadFile, Response, Request, Form, HTTPException
 from PIL import Image, ImageDraw
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from utils.manipulating_images import *
 from utils.utils import *
+from typing import Tuple, List, Any, Union
+from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 import os
 
@@ -131,4 +133,52 @@ async def append_gif(
     return Response(content=gif_bytes, media_type='image/gif')
 
 
+@app.post("/set-pixels-transparent")
+async def turn_pixels_transparent(
+    image_to_transform: UploadFile,
+    rgb_code: List[str] = Form(),
+    accuracy_percentage: int = Form(default=100)
+):
+    """
+    Transform specific image's pixels into transparent pixels. <br>
+    :param image_to_transform: Image to turn pixels transparent. <br>
+    :param rgb_code: rgb code of pixels the app will turn transparent. <br>
+    :param accuracy_percentage: The percentage of accuracy that the pixel has to match to get transparent.
+    for example, if rgb_code is (100,100,100) and liberty_percentage is 90, pixels between (90,90,90) and (110,110,110)
+    will get transformed. Default value is 100.
+    """
+    rgb_code = [int(number) for number in (rgb_code[0].split(","))]
+    if len(rgb_code) != 3:
+        return HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY)
+
+    value_pool = define_value_pool(rgb_code=rgb_code, accuracy_percentage=accuracy_percentage)
+
+    image_to_transform = Image.open(image_to_transform.file)
+    image_to_transform = image_to_transform.convert("RGBA")
+    datas = image_to_transform.getdata()
+    new_data = []
+
+    if accuracy_percentage == 100:
+        for item in datas:
+            if rgb_code == item[:3]:
+                new_data.append(tuple(item[:3] + [0]))
+            else:
+                new_data.append(item)
+    else:
+        for item in datas:
+            if pixel_is_in_value_pool(value_pool=value_pool, pixel=item):
+                data_to_append = item[:3] + (0,)
+                print(data_to_append)
+                new_data.append(data_to_append)
+            else:
+                new_data.append(item)
+
+    image_to_transform.putdata(new_data)
+
+    image_name = f"{get_random_string(8)}.png"
+    image_to_transform.save(image_name)
+    image_bytes = open(image_name, 'rb').read()
+    os.remove(image_name)
+
+    return Response(content=image_bytes, media_type=f"image/png")
 

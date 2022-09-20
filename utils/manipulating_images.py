@@ -1,3 +1,5 @@
+import json
+
 from PIL import Image
 
 
@@ -66,8 +68,39 @@ def define_background_image_size (
     return None
 
 
+def define_value_pool(rgb_code, accuracy_percentage):
+    """
+    Define min and max value a color can be to be replaced.
+
+    :param rgb_code: pixel rgb code
+    :param accuracy_percentage: accuracy percentage
+    :return: Array list containing min and max color value
+    """
+    min_percentage_multiplier = round(accuracy_percentage/100, 1)
+    max_percentage_multiplier = round(1+(1-min_percentage_multiplier), 1)
+    value_pool = []
+    for color in rgb_code:
+        min_color = int(color * min_percentage_multiplier)
+        max_color = int(color * max_percentage_multiplier)
+        value_pool.append({
+            "min_color": min_color,
+            "max_color": max_color
+        })
+    return value_pool
 
 
+def pixel_is_in_value_pool(
+    pixel: list[int],
+    value_pool: list
+):
+    """
+    Verify if pixel is in the defined value pool. Value pool defined using the accuracy percentage
+    :param pixel: integer list, the current pixel that is examined
+    :param value_pool: the min and max value that the pixel can have for Red, Green and Blue
+    :return: boolean
+    """
 
-
-
+    for i in range(3):
+        if pixel[i] < value_pool[i]["min_color"] or pixel[i] > value_pool[i]["max_color"]:
+            return False
+    return True
