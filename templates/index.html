@@ -69,7 +69,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function (){
-        // Initialize background image and gif image
+        // Initialize background_image_copy image and gif image
         var backgroundImage = document.getElementById("backgroundImage");
         var gifImage = document.getElementById("gif");
 
@@ -79,7 +79,7 @@
         backgroundImage.style.zIndex=1;
         gifImage.style.zIndex=2;
 
-        // Load background image
+        // Load background_image_copy image
         var backgroundImageInput = document.getElementById("backgroundFileLoader");
         backgroundImageInput.onchange = function (event) {
             backgroundImage.src = URL.createObjectURL(event.target.files[0]);

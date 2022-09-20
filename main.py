@@ -2,33 +2,19 @@ from fastapi import FastAPI, UploadFile, Response, Request, Form
 from PIL import Image, ImageDraw
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
-from pydantic import BaseModel
+from utils.manipulating_images import *
+from utils.utils import *
 
 import os
-import shutil
-import random
-import string
-
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 
-def get_random_string(length):
-    """
-    Generate random string length long
-    :param length:
-    :return:
-    """
-    letters = string.ascii_lowercase
-    result_str = ''.join(random.choice(letters) for i in range(length))
-    return result_str
-
-
 @app.get("/")
 async def index(request: Request):
     """
-    Index function, deliver webpage to place gif over background
+    Index function, deliver webpage to place gif over background_image_copy
     :param request:
     :return:
     """
@@ -91,16 +77,44 @@ async def append_gif(
         gif.seek(i)
         frames.append(gif.copy())
 
-    # Create a new gif with background image
+    # Define if a new background is needed
+    dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
+
+    # Add each frame on top of the backgrou,d
     new_frames = []
     for frame in frames:
-        background = background_image.copy()
+        background_image_copy = background_image.copy().convert("RGBA")
 
-        background = background.convert("RGBA")
         frame = frame.convert("RGBA")
+        frame = set_all_white_pixels_transparents(frame)
 
-        background.paste(frame, (gif_starting_x, gif_starting_y), mask=frame)
-        new_frames.append(background)
+        if dimensions_background is None:
+            background_image_copy.paste(frame, (gif_starting_x, gif_starting_y), mask=frame)
+            new_frames.append(background_image_copy)
+        else:
+            generated_background_image = Image.new(
+                "RGBA",
+                dimensions_background
+            )
+
+            generated_background_image.paste(
+                background_image_copy,
+                (
+                    0 if gif_starting_x > 0 else abs(gif_starting_x),
+                    0 if gif_starting_y > 0 else abs(gif_starting_y)
+                ),
+                mask=background_image_copy
+            )
+
+            generated_background_image.paste(
+                frame,
+                (
+                    0 if gif_starting_x < 0 else gif_starting_x,
+                    0 if gif_starting_y < 0 else gif_starting_y
+                ),
+                mask=frame
+            )
+            new_frames.append(generated_background_image)
 
     gif_name = f"{base_name}.gif"
     new_frames[0].save(
@@ -108,6 +122,7 @@ async def append_gif(
         save_all=True,
         append_images=new_frames[1:],
         duration=frames_duration,
+        disposal=2,
         loop=0
     )
 
