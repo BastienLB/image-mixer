@@ -6,6 +6,7 @@
 </head>
 <body>
     <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
+        Resize background with white to adapt to the gif : <input type="checkbox" name="adapt_background_to_gif"> <br>
         Background image : <input type="file" id="backgroundFileLoader" name="background"> <br>
         Gif image : <input type="file" id="gifImageLoader" name="gif"> <br>
         <input type="hidden" id="gifStartingX" name="gif_starting_x"> <br>

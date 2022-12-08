@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from utils.manipulating_images import *
 from utils.utils import *
-from typing import Tuple, List, Any, Union
+from typing import List, Optional
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
 import os
@@ -59,7 +59,8 @@ async def append_gif(
         gif_width: int = Form(),
         gif_height: int = Form(),
         image_width: int = Form(),
-        image_height: int = Form()
+        image_height: int = Form(),
+        adapt_background_to_gif: Optional[bool] = Form(False)
 ):
     """
     Add a gif on top of a static background image <br><br>
@@ -92,8 +93,9 @@ async def append_gif(
         frames.append(resized_frame)
 
     # Define if a new background is needed
-    # dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
     dimensions_background = None
+    if adapt_background_to_gif:
+        dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
 
     # Add each frame on top of the backgrou,d
     new_frames = []
