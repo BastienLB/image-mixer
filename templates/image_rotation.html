@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image rotation</title>
+</head>
+<body>
+    <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
+        image : <input type="file" id="backgroundFileLoader" name="background"> <br>
+        Number images to generate : <input type="number" name="number_images_to_generate">
+
+        <input type="hidden" id="imageWidth" name="image_width"> <!-- <br> -->
+        <input type="hidden" id="imageHeight" name="image_height"> <!-- <br> -->
+    </form>
+
+    <img src="" id="backgroundImage" class="image"/>
+    <img src="" id="gif" class="image">
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function (){
+        // Initialize background_image_copy image and gif image
+        var backgroundImage = document.getElementById("backgroundImage");
+        var gifImage = document.getElementById("gif");
+
+        backgroundImage.style.position="absolute";
+        gifImage.style.position="absolute";
+
+        backgroundImage.style.zIndex=1;
+        gifImage.style.zIndex=2;
+
+        // Load background_image_copy image
+        var backgroundImageInput = document.getElementById("backgroundFileLoader");
+        backgroundImageInput.onchange = function (event) {
+            backgroundImage.src = URL.createObjectURL(event.target.files[0]);
+        }
+
+        // Load gif image
+        var gifImageInput = document.getElementById("gifImageLoader");
+        gifImageInput.onchange = function (event) {
+            gifImage.src = URL.createObjectURL(event.target.files[0]);
+        }
+
+        // Moving elements on click part
+        var imageElements = document.getElementsByClassName("image");
+        var selectedElement = null;
+
+        for (var i = 0; i < imageElements.length; i++) {
+            imageElements[i].style.border="1px solid red";
+            // Mouse click events
+            imageElements[i].onclick = function (event) {
+                if(selectedElement === event.target) {
+                    selectedElement = null;
+                }
+                else {
+                    selectedElement = event.target;
+                }
+                console.log(selectedElement);
+
+                window.onmousemove = function (eventMouseMove) {
+                    if (selectedElement != null) {
+                        selectedElement.style.left = selectedElement.getBoundingClientRect().left + eventMouseMove.movementX + "px";
+                        selectedElement.style.top = selectedElement.getBoundingClientRect().top + eventMouseMove.movementY + "px";
+                    }
+                };
+
+                event.target.onwheel = function (eventMouseWheel) {
+                    if (selectedElement != null) {
+                        console.log(eventMouseWheel.deltaY)
+                        var resize = eventMouseWheel.deltaY * -1
+                        eventMouseWheel.preventDefault();
+
+                        // Scrolling up
+                        //if (eventMouseWheel.deltaY < 0) {
+                        let element_width = selectedElement.getBoundingClientRect().width;
+                        let element_height = selectedElement.getBoundingClientRect().height;
+                        let slope = element_height / element_width;
+
+                        let new_height = element_height + resize
+
+                        selectedElement.style.height = new_height + "px";
+                        selectedElement.style.width = (new_height/slope) + "px";
+                        //}
+
+                        /*// Scrolling down
+                        if (eventMouseWheel.deltaY > 0) {
+
+                            selectedElement.style.width = (selectedElement.getBoundingClientRect().width + resize ) + "px";
+                            selectedElement.style.height = (selectedElement.getBoundingClientRect().height + resize ) + "px";
+                        }*/
+                    }
+                };
+
+            };
+
+            // Click events
+            imageElements[i].addEventListener("touchstart", function (touchstartEvent) {
+                document.body.style.touchAction = "none";
+                touchstartEvent.preventDefault();
+
+                selectedElement = touchstartEvent.target;
+
+                var previousTouchX = touchstartEvent.touches[0].clientX;
+                var previousTouchY = touchstartEvent.touches[0].clientY;
+                selectedElement.ontouchmove = (touchmoveEvent) => {
+                    touchmoveEvent.preventDefault();
+                    document.body.style.touchAction = "none";
+                    var currentTouchX = touchmoveEvent.touches[0].clientX;
+                    var currentTouchY = touchmoveEvent.touches[0].clientY;
+
+                    var moveX = currentTouchX - previousTouchX;
+                    var moveY = currentTouchY - previousTouchY;
+
+                    selectedElement.style.left = selectedElement.getBoundingClientRect().left + moveX + "px";
+                    selectedElement.style.top = selectedElement.getBoundingClientRect().top + moveY + "px";
+
+                    previousTouchX = currentTouchX;
+                    previousTouchY = currentTouchY;
+                }
+
+                selectedElement.addEventListener("touchend", function (touchendEvent){
+                    selectedElement = null;
+                    document.body.style.touchAction = "auto";
+                });
+            });
+        }
+
+
+        // Uploading form part
+        var formElement = document.getElementById("imageForm");
+        formElement.onsubmit = function (event) {
+            backgroundImage.style.border = "";
+            gifImage.style.border = "";
+
+            var gifStartingX = gifImage.getBoundingClientRect().left - backgroundImage.getBoundingClientRect().left;
+            var gifStartingY = gifImage.getBoundingClientRect().top - backgroundImage.getBoundingClientRect().top;
+            var gifHeight = gifImage.getBoundingClientRect().height;
+            var gifWidth = gifImage.getBoundingClientRect().width;
+            var imageHeight = backgroundImage.getBoundingClientRect().height;
+            var imageWidth = backgroundImage.getBoundingClientRect().width;
+
+            var gifStartingXInput = document.getElementById("gifStartingX");
+            var gifStartingYInput = document.getElementById("gifStartingY");
+            var gifWidthInput = document.getElementById("gifWidth");
+            var gifHeightInput = document.getElementById("gifHeight");
+            var imageWidthInput = document.getElementById("imageWidth");
+            var imageHeightInput = document.getElementById("imageHeight");
+
+            gifStartingXInput.value = parseInt(gifStartingX);
+            gifStartingYInput.value = parseInt(gifStartingY);
+            gifWidthInput.value = parseInt(gifWidth);
+            gifHeightInput.value = parseInt(gifHeight);
+            imageWidthInput.value = parseInt(imageWidth);
+            imageHeightInput.value = parseInt(imageHeight);
+        }
+
+    });
+</script>
+
+</html>

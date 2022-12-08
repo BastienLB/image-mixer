@@ -27,6 +27,18 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "url": generate_gif_url})
 
 
+@app.get("/image_rotation_gif")
+async def image_rotation_gif_front(request: Request):
+    """
+    Return front-end fonction for gif
+    """
+    service_ip = os.getenv("SERVICE_IP") if os.getenv("SERVICE_IP") is not None else "127.0.0.1:8000"
+    endpoint = "image_rotation_gif"
+    generate_gif_url = f"http://{service_ip}/{endpoint}"
+
+    return templates.TemplateResponse("image_rotation.html", {"request": request, "url": generate_gif_url})
+
+
 @app.post("/two_images_mix")
 async def two_images_mix(
         background: UploadFile,
@@ -70,6 +82,12 @@ async def append_gif(
     Background image top left corner is x = 0 and y = 0 <br>
     :param gif_starting_y: gif starting position in Y axis relative to background image.
     Background image top left corner is x = 0 and y = 0 <br>
+    :param gif_width: Gif width in pixel
+    :param gif_height: Gif height in pixel
+    :param image_width: Background width in pixel
+    :param image_height: Background height in pixel
+    :param adapt_background_to_gif: If the gif border goes outside the background border,
+    fill the difference with white background
     """
 
     base_name = get_random_string(5)
@@ -97,7 +115,7 @@ async def append_gif(
     if adapt_background_to_gif:
         dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
 
-    # Add each frame on top of the backgrou,d
+    # Add each frame on top of the background
     new_frames = []
     for frame in frames:
         background_image_copy = background_image.copy().convert("RGBA")
@@ -143,6 +161,7 @@ async def append_gif(
         append_images=new_frames[1:],
         duration=frames_duration,
         disposal=2,
+        quality=100,
         loop=0
     )
 
@@ -199,4 +218,61 @@ async def turn_pixels_transparent(
     os.remove(image_name)
 
     return Response(content=image_bytes, media_type=f"image/png")
+
+
+@app.post("/image_rotation_gif")
+async def generate_gif_rotation_image(
+        image_to_transform: UploadFile,
+        rotation_direction: int = Form(),
+        image_width: Optional[int] = Form(0),
+        image_height: Optional[int] = Form(0),
+        number_images_to_generate: int = Form(),
+        duration: List[str] = Form()
+):
+    """
+    Create an animation with a single image
+    :param image_to_transform: The image to transform
+    :param rotation_direction: -1 will rotate the image in the clockwise rotation, 1 in the opposite direction
+    :param image_width: Optional, new image width
+    :param image_height: Optional, new image height
+    :param number_images_to_generate: The number of images that will compose the gif
+    :param duration: The display duration of each frame, in milliseconds.
+    Pass a single integer for a constant duration, or a list or tuple to set the duration for each frame separately.
+    """
+
+    image = Image.open(image_to_transform.file)
+
+    if image_width is None and image_height is None:
+        image = image.resize((image_width, image_height))
+
+    frameList = []
+    rotation = (360 / number_images_to_generate) * rotation_direction
+    base_name = get_random_string(5)
+    duration = [int(number) for number in (duration[0].split(","))]
+
+    if len(duration) == 1:
+        duration = duration[0]
+
+    print(rotation)
+    frameList.append(image)
+    for i in range(number_images_to_generate - 1):
+        image = image.rotate(rotation, fillcolor=(0, 0, 0, 0), expand=True)
+        frameList.append(image)
+
+    gif_name = f"{base_name}.gif"
+
+    frameList[0].save(
+        gif_name,
+        save_all=True,
+        append_images=frameList[1:],
+        duration=duration,
+        disposal=2,
+        quality=100,
+        loop=0
+    )
+
+    gif_bytes = open(gif_name, 'rb').read()
+    os.remove(gif_name)
+    return Response(content=gif_bytes, media_type='image/gif')
+
 
