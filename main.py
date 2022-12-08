@@ -230,14 +230,23 @@ async def generate_gif_rotation_image(
         duration: List[str] = Form()
 ):
     """
-    Create an animation with a single image
-    :param image_to_transform: The image to transform
-    :param rotation_direction: -1 will rotate the image in the clockwise rotation, 1 in the opposite direction
-    :param image_width: Optional, new image width
-    :param image_height: Optional, new image height
-    :param number_images_to_generate: The number of images that will compose the gif
-    :param duration: The display duration of each frame, in milliseconds.
-    Pass a single integer for a constant duration, or a list or tuple to set the duration for each frame separately.
+    Create an animation with a single image                                                                     <br><br>
+
+    <b>:param image_to_transform:</b> The image to transform                                                    <br>
+
+    <b>:param rotation_direction:</b> -1 will rotate the image in the clockwise rotation,
+    1 in the opposite direction                                                                                 <br>
+
+    <b>:param image_width:</b> Optional, new image width in pixels                                              <br>
+
+    <b>:param image_height:</b> Optional, new image height in pixels                                            <br>
+
+    <b>:param number_images_to_generate:</b> The number of images that will compose the gif                     <br>
+
+    <b>:param duration:</b> The display duration of each frame, in milliseconds.                                <br>
+    Pass a single integer for a constant duration, or a list or tuple to set
+    the duration for each frame separately.                                                                     <br>
+    Need to be either one number or as many numbers than generated images                                       <br>
     """
 
     image = Image.open(image_to_transform.file)
