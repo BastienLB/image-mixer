@@ -55,7 +55,11 @@ async def append_gif(
         background: UploadFile,
         gif: UploadFile,
         gif_starting_x: int = Form(),
-        gif_starting_y: int = Form()
+        gif_starting_y: int = Form(),
+        gif_width: int = Form(),
+        gif_height: int = Form(),
+        image_width: int = Form(),
+        image_height: int = Form()
 ):
     """
     Add a gif on top of a static background image <br><br>
@@ -73,14 +77,23 @@ async def append_gif(
     frames_duration = gif.info["duration"]
     background_image = Image.open(background.file)
 
+    gif_size = (gif_width, gif_height)
+    image_size = (image_width, image_height)
+
+    print(f"Original image size: ({background_image.width}, {background_image.height})")
+    print(f"Current image size: ({image_width}, {image_height})")
+
+    background_image = background_image.resize(image_size)
     # Split gif frames
     frames = []
     for i in range(number_frames):
         gif.seek(i)
-        frames.append(gif.copy())
+        resized_frame = gif.resize(gif_size)
+        frames.append(resized_frame)
 
     # Define if a new background is needed
-    dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
+    # dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
+    dimensions_background = None
 
     # Add each frame on top of the backgrou,d
     new_frames = []
@@ -88,6 +101,8 @@ async def append_gif(
         background_image_copy = background_image.copy().convert("RGBA")
 
         frame = frame.convert("RGBA")
+
+        # Transform white pixels to transparent
         frame = set_all_white_pixels_transparents(frame)
 
         if dimensions_background is None:
@@ -96,7 +111,8 @@ async def append_gif(
         else:
             generated_background_image = Image.new(
                 "RGBA",
-                dimensions_background
+                dimensions_background,
+                (255,255,255)
             )
 
             generated_background_image.paste(

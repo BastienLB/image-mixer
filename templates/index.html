@@ -10,8 +10,13 @@
         Gif image : <input type="file" id="gifImageLoader" name="gif"> <br>
         <input type="hidden" id="gifStartingX" name="gif_starting_x"> <br>
         <input type="hidden" id="gifStartingY" name="gif_starting_y"> <br>
+        <input type="hidden" id="gifWidth" name="gif_width"> <!-- <br> -->
+        <input type="hidden" id="gifHeight" name="gif_height"> <!-- <br> -->
+        <input type="hidden" id="imageWidth" name="image_width"> <!-- <br> -->
+        <input type="hidden" id="imageHeight" name="image_height"> <!-- <br> -->
         <input type="submit" value="Generate">
     </form>
+
     Left click on an image to start moving it and left click again on the image to place it <br>
     <img src="" id="backgroundImage" class="image"/>
     <img src="" id="gif" class="image">
@@ -64,6 +69,33 @@
                     }
                 };
 
+                event.target.onwheel = function (eventMouseWheel) {
+                    if (selectedElement != null) {
+                        console.log(eventMouseWheel.deltaY)
+                        var resize = eventMouseWheel.deltaY * -1
+                        eventMouseWheel.preventDefault();
+
+                        // Scrolling up
+                        //if (eventMouseWheel.deltaY < 0) {
+                        let element_width = selectedElement.getBoundingClientRect().width;
+                        let element_height = selectedElement.getBoundingClientRect().height;
+                        let slope = element_height / element_width;
+
+                        let new_height = element_height + resize
+
+                        selectedElement.style.height = new_height + "px";
+                        selectedElement.style.width = (new_height/slope) + "px";
+                        //}
+
+                        /*// Scrolling down
+                        if (eventMouseWheel.deltaY > 0) {
+
+                            selectedElement.style.width = (selectedElement.getBoundingClientRect().width + resize ) + "px";
+                            selectedElement.style.height = (selectedElement.getBoundingClientRect().height + resize ) + "px";
+                        }*/
+                    }
+                };
+
             };
 
             // Click events
@@ -102,14 +134,29 @@
         // Uploading form part
         var formElement = document.getElementById("imageForm");
         formElement.onsubmit = function (event) {
+            backgroundImage.style.border = "";
+            gifImage.style.border = "";
+
             var gifStartingX = gifImage.getBoundingClientRect().left - backgroundImage.getBoundingClientRect().left;
             var gifStartingY = gifImage.getBoundingClientRect().top - backgroundImage.getBoundingClientRect().top;
+            var gifHeight = gifImage.getBoundingClientRect().height;
+            var gifWidth = gifImage.getBoundingClientRect().width;
+            var imageHeight = backgroundImage.getBoundingClientRect().height;
+            var imageWidth = backgroundImage.getBoundingClientRect().width;
 
             var gifStartingXInput = document.getElementById("gifStartingX");
             var gifStartingYInput = document.getElementById("gifStartingY");
+            var gifWidthInput = document.getElementById("gifWidth");
+            var gifHeightInput = document.getElementById("gifHeight");
+            var imageWidthInput = document.getElementById("imageWidth");
+            var imageHeightInput = document.getElementById("imageHeight");
 
             gifStartingXInput.value = parseInt(gifStartingX);
             gifStartingYInput.value = parseInt(gifStartingY);
+            gifWidthInput.value = parseInt(gifWidth);
+            gifHeightInput.value = parseInt(gifHeight);
+            imageWidthInput.value = parseInt(imageWidth);
+            imageHeightInput.value = parseInt(imageHeight);
         }
 
     });
