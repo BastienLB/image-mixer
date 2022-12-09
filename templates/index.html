@@ -7,6 +7,7 @@
 <body>
     <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
         Resize background with white to adapt to the gif : <input type="checkbox" name="adapt_background_to_gif"> <br>
+        Set gif white pixels transparent : <input type="checkbox" name="set_white_pixels_transparents" checked> <br>
         Background image : <input type="file" id="backgroundFileLoader" name="background"> <br>
         Gif image : <input type="file" id="gifImageLoader" name="gif"> <br>
         <input type="hidden" id="gifStartingX" name="gif_starting_x"> <br>

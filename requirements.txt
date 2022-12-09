@@ -1,3 +1,4 @@
 Pillow
 fastapi[all]
 jinja2
+apng

@@ -1,3 +1,4 @@
+from apng import APNG
 from fastapi import FastAPI, UploadFile, Response, Request, Form, HTTPException
 from PIL import Image, ImageDraw
 from fastapi.templating import Jinja2Templates
@@ -72,7 +73,9 @@ async def append_gif(
         gif_height: int = Form(),
         image_width: int = Form(),
         image_height: int = Form(),
-        adapt_background_to_gif: Optional[bool] = Form(False)
+        adapt_background_to_gif: Optional[bool] = Form(False),
+        set_white_pixels_transparents: Optional[bool] = Form(False),
+        apng: Optional[bool] = Form(False)
 ):
     """
     Add a gif on top of a static background image <br><br>
@@ -95,6 +98,7 @@ async def append_gif(
     number_frames = gif.n_frames
     frames_duration = gif.info["duration"]
     background_image = Image.open(background.file)
+    print(set_white_pixels_transparents)
 
     gif_size = (gif_width, gif_height)
     image_size = (image_width, image_height)
@@ -103,6 +107,7 @@ async def append_gif(
     print(f"Current image size: ({image_width}, {image_height})")
 
     background_image = background_image.resize(image_size)
+
     # Split gif frames
     frames = []
     for i in range(number_frames):
@@ -123,7 +128,8 @@ async def append_gif(
         frame = frame.convert("RGBA")
 
         # Transform white pixels to transparent
-        frame = set_all_white_pixels_transparents(frame)
+        if set_white_pixels_transparents:
+            frame = set_all_white_pixels_transparents(frame)
 
         if dimensions_background is None:
             background_image_copy.paste(frame, (gif_starting_x, gif_starting_y), mask=frame)
@@ -289,4 +295,30 @@ async def generate_gif_rotation_image(
     os.remove(gif_name)
     return Response(content=gif_bytes, media_type='image/gif')
 
+
+@app.post("/test")
+async def test_convert_rgba(
+        image: UploadFile,
+        image2: UploadFile,
+        to_gif: bool = Form()
+):
+    image_pil = Image.open(image.file).convert("RGBA")
+    image2_pil = Image.open(image2.file).convert("RGBA")
+    image_pil.paste(image2_pil)
+
+    if to_gif:
+        image_pil.save(image.filename)
+        images = [image.filename]
+        APNG.from_files(images, delay=100).save("generated.png")
+        response_bytes = open("generated.png", 'rb').read()
+
+        os.remove("generated.png")
+        os.remove(image.filename)
+
+    else:
+        image_pil.save(image.filename)
+        response_bytes = open(image.filename, 'rb').read()
+        os.remove(image.filename)
+
+    return Response(content=response_bytes, media_type=f"image/{image.filename.split('.')[1]}")
 
