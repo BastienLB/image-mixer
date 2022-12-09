@@ -227,7 +227,7 @@ async def generate_gif_rotation_image(
         image_width: Optional[int] = Form(0),
         image_height: Optional[int] = Form(0),
         number_images_to_generate: int = Form(),
-        duration: List[str] = Form()
+        duration: List[int] = Form()
 ):
     """
     Create an animation with a single image                                                                     <br><br>
@@ -247,25 +247,31 @@ async def generate_gif_rotation_image(
     Pass a single integer for a constant duration, or a list or tuple to set
     the duration for each frame separately.                                                                     <br>
     Need to be either one number or as many numbers than generated images                                       <br>
+
+    <b>:param expand:</b> Boolean, define if we should expand the image during the rotation
     """
 
+    # image = Image.open(image_to_transform.file).convert("RGBA").quantize()
     image = Image.open(image_to_transform.file)
 
     if image_width is None and image_height is None:
         image = image.resize((image_width, image_height))
+        print(f"Image width: {image_width} \n Image height: {image_height}")
+
 
     frameList = []
     rotation = (360 / number_images_to_generate) * rotation_direction
     base_name = get_random_string(5)
-    duration = [int(number) for number in (duration[0].split(","))]
 
+    # duration = [int(number) for number in (duration[0].split(","))]
     if len(duration) == 1:
         duration = duration[0]
 
     print(rotation)
     frameList.append(image)
     for i in range(number_images_to_generate - 1):
-        image = image.rotate(rotation, fillcolor=(0, 0, 0, 0), expand=True)
+        image = image.rotate(rotation, expand=False, resample=Image.BICUBIC)
+        print("New rotation")
         frameList.append(image)
 
     gif_name = f"{base_name}.gif"

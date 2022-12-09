@@ -6,11 +6,29 @@
 </head>
 <body>
     <form id="imageForm" method="POST" action="{{ url }}" enctype="multipart/form-data">
-        image : <input type="file" id="backgroundFileLoader" name="background"> <br>
-        Number images to generate : <input type="number" name="number_images_to_generate">
+        image : <input type="file" id="backgroundFileLoader" name="image_to_transform"> <br>
+        Rotation Direction: <input type="number" name="rotation_direction" min="-1" max="1" value="0">
+        <!-- Expand on rotation : <input type="checkbox" name="expand"> <br> -->
+        <ul>
+            <li>    -1 : clockwise rotation         </li>
+            <li>    0 : no rotation                 </li>
+            <li>    1 : reverse clockwise rotation  </li>
+        </ul>
+        <br>
+        Number images to generate : <input type="number" name="number_images_to_generate" id="numberImagesToGenerate"> <br><br>
+
+        Start range :   <input type="range" id="startRange" min="0"> <div id="startRangeText"></div> <br>
+        End range :     <input type="range" id="endRange" min="0"> <div id="endRangeText"></div> <br>
+        Speed :         <input type="number" id="speed"><br><br>
+
+        <button id="updateAnimation">Update animation</button>
+
+        <ul id="modificationHistory"></ul>
 
         <input type="hidden" id="imageWidth" name="image_width"> <!-- <br> -->
         <input type="hidden" id="imageHeight" name="image_height"> <!-- <br> -->
+
+        <input type="submit" value="Generate gif">
     </form>
 
     <img src="" id="backgroundImage" class="image"/>
@@ -21,13 +39,125 @@
     document.addEventListener("DOMContentLoaded", function (){
         // Initialize background_image_copy image and gif image
         var backgroundImage = document.getElementById("backgroundImage");
-        var gifImage = document.getElementById("gif");
+        var numberImagesToGenerate = document.getElementById("numberImagesToGenerate");
+        var startRange = document.getElementById("startRange");
+        var startRangeText = document.getElementById("startRangeText");
+        var endRange = document.getElementById("endRange");
+        var endRangeText = document.getElementById("endRangeText");
+        var speed = document.getElementById("speed");
+        var updateAnimationButton = document.getElementById("updateAnimation");
+        var modificationHistory = document.getElementById("modificationHistory");
 
         backgroundImage.style.position="absolute";
-        gifImage.style.position="absolute";
 
         backgroundImage.style.zIndex=1;
-        gifImage.style.zIndex=2;
+
+        numberImagesToGenerate.onchange = function (e) {
+            startRange.max = numberImagesToGenerate.value - 1;
+            endRange.max = numberImagesToGenerate.value - 1;
+        }
+
+        // Write updated text
+        startRange.onchange = function (e) {
+            startRangeText.innerText = startRange.value;
+        }
+        endRange.onchange = function (e) {
+            endRangeText.innerText = endRange.value;
+        }
+
+        // Modifications
+        var modificationList = []
+        class Modification {
+            constructor(id, startRange, endRange, speed, nbrImages, previousDuration = null) {
+                this.id = id;
+                this.startRange = startRange;
+                this.endRange = endRange;
+                this.speed = speed;
+                this.nbrImages = nbrImages;
+
+                this.update(previousDuration);
+                this.placeModificationHistory();
+            }
+
+            update(previousDuration = null) {
+                this.duration = [];
+                if (previousDuration === null) {
+                    for (let i=0; i<this.nbrImages; i++) {
+                        this.duration[i] = 1/this.nbrImages;
+                    }
+                }
+                else {
+                    this.duration = previousDuration;
+                }
+                for (let i=this.startRange; i <= this.endRange; i++) {
+                    this.duration[i] = parseInt(this.speed);
+                }
+                console.log(modificationList);
+            }
+
+            placeModificationHistory() {
+                var liStartRange = document.createElement("li");
+                liStartRange.appendChild(document.createTextNode("Start range: " + this.startRange));
+                modificationHistory.appendChild(liStartRange);
+
+                var liEndRange = document.createElement("li");
+                liEndRange.appendChild(document.createTextNode("End range: " + this.endRange));
+                modificationHistory.appendChild(liEndRange);
+
+                var liSpeed = document.createElement("li");
+                liSpeed.appendChild(document.createTextNode("Speed: " + this.speed));
+                modificationHistory.appendChild(liSpeed);
+
+                var button = document.createElement("button");
+                button.setAttribute("id", this.id);
+                button.setAttribute("class", "modificationButton");
+                button.appendChild(document.createTextNode("Delete"));
+                modificationHistory
+                    .appendChild(button);
+                modificationHistory.appendChild(document.createElement("br"));
+                modificationHistory.appendChild(document.createElement("br"));
+
+                button.onclick = function (e) {
+                    liStartRange.parentNode.removeChild(liStartRange);
+                    liEndRange.parentNode.removeChild(liEndRange);
+                    liSpeed.parentNode.removeChild(liSpeed);
+                    button.parentNode.removeChild(button);
+
+                    modificationList.splice(this.id, 1);
+
+                    for (let i=0; i<modificationList.length; i++) {
+                        modificationList[i].id = i;
+                        if (i > 0) {
+                            modificationList[i].update(modificationList[i-1].duration.slice());
+                        }
+                        else {
+                            modificationList[i].update(null);
+                        }
+                    }
+
+                    e.preventDefault();
+                }
+            }
+        }
+
+
+        updateAnimationButton.onclick = function (e) {
+            let previousDuration = null
+            if (modificationList.length > 0) {
+                previousDuration = modificationList[modificationList.length-1].duration.slice();
+            }
+            var newModification = new Modification(
+                modificationList.length,
+                startRange.value,
+                endRange.value,
+                speed.value,
+                numberImagesToGenerate.value,
+                previousDuration
+            )
+
+            modificationList.push(newModification);
+            e.preventDefault();
+        }
 
         // Load background_image_copy image
         var backgroundImageInput = document.getElementById("backgroundFileLoader");
@@ -35,11 +165,6 @@
             backgroundImage.src = URL.createObjectURL(event.target.files[0]);
         }
 
-        // Load gif image
-        var gifImageInput = document.getElementById("gifImageLoader");
-        gifImageInput.onchange = function (event) {
-            gifImage.src = URL.createObjectURL(event.target.files[0]);
-        }
 
         // Moving elements on click part
         var imageElements = document.getElementsByClassName("image");
@@ -71,7 +196,6 @@
                         eventMouseWheel.preventDefault();
 
                         // Scrolling up
-                        //if (eventMouseWheel.deltaY < 0) {
                         let element_width = selectedElement.getBoundingClientRect().width;
                         let element_height = selectedElement.getBoundingClientRect().height;
                         let slope = element_height / element_width;
@@ -80,14 +204,6 @@
 
                         selectedElement.style.height = new_height + "px";
                         selectedElement.style.width = (new_height/slope) + "px";
-                        //}
-
-                        /*// Scrolling down
-                        if (eventMouseWheel.deltaY > 0) {
-
-                            selectedElement.style.width = (selectedElement.getBoundingClientRect().width + resize ) + "px";
-                            selectedElement.style.height = (selectedElement.getBoundingClientRect().height + resize ) + "px";
-                        }*/
                     }
                 };
 
@@ -130,28 +246,24 @@
         var formElement = document.getElementById("imageForm");
         formElement.onsubmit = function (event) {
             backgroundImage.style.border = "";
-            gifImage.style.border = "";
 
-            var gifStartingX = gifImage.getBoundingClientRect().left - backgroundImage.getBoundingClientRect().left;
-            var gifStartingY = gifImage.getBoundingClientRect().top - backgroundImage.getBoundingClientRect().top;
-            var gifHeight = gifImage.getBoundingClientRect().height;
-            var gifWidth = gifImage.getBoundingClientRect().width;
-            var imageHeight = backgroundImage.getBoundingClientRect().height;
+            // Define image width & height
             var imageWidth = backgroundImage.getBoundingClientRect().width;
-
-            var gifStartingXInput = document.getElementById("gifStartingX");
-            var gifStartingYInput = document.getElementById("gifStartingY");
-            var gifWidthInput = document.getElementById("gifWidth");
-            var gifHeightInput = document.getElementById("gifHeight");
+            var imageHeight = backgroundImage.getBoundingClientRect().height;
             var imageWidthInput = document.getElementById("imageWidth");
             var imageHeightInput = document.getElementById("imageHeight");
-
-            gifStartingXInput.value = parseInt(gifStartingX);
-            gifStartingYInput.value = parseInt(gifStartingY);
-            gifWidthInput.value = parseInt(gifWidth);
-            gifHeightInput.value = parseInt(gifHeight);
             imageWidthInput.value = parseInt(imageWidth);
             imageHeightInput.value = parseInt(imageHeight);
+
+            // Add frame durations
+            for (let i = 0; i < numberImagesToGenerate.value; i++) {
+                var lastModification = modificationList[modificationList.length-1]
+                var durationInput = document.createElement("input");
+                durationInput.setAttribute("hidden", "true");
+                durationInput.setAttribute("name", "duration");
+                durationInput.setAttribute("value", lastModification.duration[i]);
+                formElement.appendChild(durationInput);
+            }
         }
 
     });
