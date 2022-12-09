@@ -254,7 +254,7 @@ async def generate_gif_rotation_image(
     # image = Image.open(image_to_transform.file).convert("RGBA").quantize()
     image = Image.open(image_to_transform.file)
 
-    if image_width is None and image_height is None:
+    if image_width is not None and image_height is not None:
         image = image.resize((image_width, image_height))
         print(f"Image width: {image_width} \n Image height: {image_height}")
 
@@ -270,9 +270,8 @@ async def generate_gif_rotation_image(
     print(rotation)
     frameList.append(image)
     for i in range(number_images_to_generate - 1):
-        image = image.rotate(rotation, expand=False, resample=Image.BICUBIC)
+        frameList.append(image.rotate(rotation*i, expand=False, resample=Image.BICUBIC))
         print("New rotation")
-        frameList.append(image)
 
     gif_name = f"{base_name}.gif"
 
@@ -281,7 +280,7 @@ async def generate_gif_rotation_image(
         save_all=True,
         append_images=frameList[1:],
         duration=duration,
-        disposal=2,
+        # disposal=2,
         quality=100,
         loop=0
     )
