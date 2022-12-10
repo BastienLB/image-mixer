@@ -118,6 +118,7 @@ async def append_gif(
     # Define if a new background is needed
     dimensions_background = None
     if adapt_background_to_gif:
+        print("Adapt background to gif")
         dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
 
     # Add each frame on top of the background
@@ -129,6 +130,7 @@ async def append_gif(
 
         # Transform white pixels to transparent
         if set_white_pixels_transparents:
+            print("Set white pixels transparents")
             frame = set_all_white_pixels_transparents(frame)
 
         if dimensions_background is None:
@@ -138,7 +140,7 @@ async def append_gif(
             generated_background_image = Image.new(
                 "RGBA",
                 dimensions_background,
-                (255,255,255)
+                (255, 255, 255)
             )
 
             generated_background_image.paste(
@@ -166,7 +168,8 @@ async def append_gif(
         save_all=True,
         append_images=new_frames[1:],
         duration=frames_duration,
-        disposal=2,
+        optimize=True,
+        # disposal=2,
         quality=100,
         loop=0
     )
