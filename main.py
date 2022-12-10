@@ -1,5 +1,6 @@
 from apng import APNG
 from fastapi import FastAPI, UploadFile, Response, Request, Form, HTTPException
+from fastapi.responses import HTMLResponse
 from PIL import Image, ImageDraw
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -14,7 +15,14 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
+async def index(request:Request):
+    return """
+    <a href="/append_gif">put gif on background image</a> <br>
+    <a href="/image_rotation_gif"> Make an image turn</a> 
+    """
+
+@app.get("/append_gif")
 async def index(request: Request):
     """
     Index function, deliver webpage to place gif over background_image_copy
@@ -62,6 +70,9 @@ async def two_images_mix(
 
     return Response(content=image_bytes, media_type="image/png")
 
+
+def fuse_background_image_and_gif():
+    pass
 
 @app.post("/append_gif")
 async def append_gif(
@@ -124,7 +135,7 @@ async def append_gif(
     # Add each frame on top of the background
     new_frames = []
     for frame in frames:
-        background_image_copy = background_image.copy().convert("RGBA")
+        background_image_copy = background_image.copy()
 
         frame = frame.convert("RGBA")
 
