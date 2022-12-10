@@ -71,9 +71,6 @@ async def two_images_mix(
     return Response(content=image_bytes, media_type="image/png")
 
 
-def fuse_background_image_and_gif():
-    pass
-
 @app.post("/append_gif")
 async def append_gif(
         background: UploadFile,
@@ -85,28 +82,26 @@ async def append_gif(
         image_width: int = Form(),
         image_height: int = Form(),
         adapt_background_to_gif: Optional[bool] = Form(False),
-        set_white_pixels_transparents: Optional[bool] = Form(False),
-        apng: Optional[bool] = Form(False)
+        set_white_pixels_transparents: Optional[bool] = Form(False)
 ):
     """
-    Add a gif on top of a static background image <br><br>
-    :param background: Background image <br>
-    :param gif: Gif to place. Everything outside the background image will get cut <br>
+    Add a gif on top of a static background image                                           <br><br>
+    :param background: Background image                                                     <br>
+    :param gif: Gif to place. Everything outside the background image will get cut          <br>
     :param gif_starting_x: gif starting position in X axis relative to background image.
-    Background image top left corner is x = 0 and y = 0 <br>
+    Background image top left corner is x = 0 and y = 0                                     <br>
     :param gif_starting_y: gif starting position in Y axis relative to background image.
-    Background image top left corner is x = 0 and y = 0 <br>
-    :param gif_width: Gif width in pixel
-    :param gif_height: Gif height in pixel
-    :param image_width: Background width in pixel
-    :param image_height: Background height in pixel
+    Background image top left corner is x = 0 and y = 0                                     <br>
+    :param gif_width: Gif width in pixel                                                    <br>
+    :param gif_height: Gif height in pixel                                                  <br>
+    :param image_width: Background width in pixel                                           <br>
+    :param image_height: Background height in pixel                                         <br>
     :param adapt_background_to_gif: If the gif border goes outside the background border,
     fill the difference with white background
     """
 
     base_name = get_random_string(5)
     gif = Image.open(gif.file)
-    number_frames = gif.n_frames
     frames_duration = gif.info["duration"]
     background_image = Image.open(background.file)
     print(set_white_pixels_transparents)
@@ -119,34 +114,27 @@ async def append_gif(
 
     background_image = background_image.resize(image_size)
 
-    # Split gif frames
-    frames = []
-    for i in range(number_frames):
-        gif.seek(i)
-        resized_frame = gif.resize(gif_size)
-        frames.append(resized_frame)
+    # Extract frames
+    frames = extract_frames_from_gif(gif, gif_size)
 
     # Define if a new background is needed
     dimensions_background = None
     if adapt_background_to_gif:
-        print("Adapt background to gif")
         dimensions_background = define_background_image_size(gif_starting_x, gif_starting_y, frames[0], background_image)
 
     # Add each frame on top of the background
     new_frames = []
-    for frame in frames:
-        background_image_copy = background_image.copy()
-
-        frame = frame.convert("RGBA")
+    for gif_frame in frames:
+        gif_frame = gif_frame.convert("RGBA")
+        background_image_to_update = background_image.copy()
 
         # Transform white pixels to transparent
         if set_white_pixels_transparents:
-            print("Set white pixels transparents")
-            frame = set_all_white_pixels_transparents(frame)
+            gif_frame = set_all_white_pixels_transparents(gif_frame)
 
         if dimensions_background is None:
-            background_image_copy.paste(frame, (gif_starting_x, gif_starting_y), mask=frame)
-            new_frames.append(background_image_copy)
+            background_image_to_update.paste(gif_frame, (gif_starting_x, gif_starting_y), mask=gif_frame)
+            new_frames.append(background_image_to_update)
         else:
             generated_background_image = Image.new(
                 "RGBA",
@@ -155,21 +143,21 @@ async def append_gif(
             )
 
             generated_background_image.paste(
-                background_image_copy,
+                background_image_to_update,
                 (
                     0 if gif_starting_x > 0 else abs(gif_starting_x),
                     0 if gif_starting_y > 0 else abs(gif_starting_y)
                 ),
-                mask=background_image_copy
+                mask=background_image_to_update
             )
 
             generated_background_image.paste(
-                frame,
+                gif_frame,
                 (
                     0 if gif_starting_x < 0 else gif_starting_x,
                     0 if gif_starting_y < 0 else gif_starting_y
                 ),
-                mask=frame
+                mask=gif_frame
             )
             new_frames.append(generated_background_image)
 
